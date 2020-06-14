@@ -11,6 +11,8 @@ import cookieParser from 'cookie-parser'
 import config from './config'
 import Html from '../client/html'
 
+const { readFile, writeFile, unlink } = require('fs').promises
+
 const Root = () => ''
 
 try {
@@ -40,21 +42,18 @@ const middleware = [
   cookieParser()
 ]
 
-const { readFile, writeFile, unlink } = require('fs').promises
+middleware.forEach((it) => server.use(it))
+
+server.use('/api/', (req, res) => {
+  res.status(404)
+  res.end()
+})
 
 const setHeaders = (req, res, next) => {
   res.set('x-skillcrucial-user', 'e0286edb-2a6f-4c16-a4ec-d762f3b7d4e6')
   res.set('Access-Control-Expose-Headers', 'X-SKILLCRUCIAL-USER')
   next()
 }
-
-server.use(cors())
-
-server.use(express.static(path.resolve(__dirname, '../dist/assets')))
-server.use(bodyParser.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 }))
-server.use(bodyParser.json({ limit: '50mb', extended: true }))
-
-middleware.forEach((it) => server.use(it))
 
 server.use(setHeaders)
 
@@ -110,11 +109,6 @@ server.delete('/api/v1/users/:userID/', async (req, res) => {
 
 server.delete('/api/v1/users', async (_req, res) => {
   await unlink(`${__dirname}/test.json`)
-  res.end()
-})
-
-server.use('/api/', (req, res) => {
-  res.status(404)
   res.end()
 })
 
